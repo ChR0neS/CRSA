@@ -18,7 +18,6 @@ function gcd(a, b) {
     return a;
 }
 
-// Algoritmo de Euclides Extendido para Inverso Modular
 function modInverse(a, m) {
     let m0 = m;
     let y = 0n, x = 1n;
@@ -36,7 +35,6 @@ function modInverse(a, m) {
     return x;
 }
 
-// Exponenciación Modular Rápida: (base^exp) % mod
 function modPow(base, exp, mod) {
     let res = 1n;
     base = base % mod;
@@ -58,78 +56,96 @@ const warningMsg = document.getElementById('warning-msg');
 const outN = document.getElementById('out-n');
 const outPhi = document.getElementById('out-phi');
 const outD = document.getElementById('out-d');
-const outC = document.getElementById('out-c');
+const outCTotal = document.getElementById('out-c-total');
 const outMDec = document.getElementById('out-m-dec');
 
-// Lógica Principal
 function updateRSA() {
     const p = parseInt(pInput.value);
     const q = parseInt(qInput.value);
-    const M_val = parseInt(mInput.value);
+    const textMsg = mInput.value;
 
-    // Validación de Primos
-    if (!isPrime(p) || !isPrime(q)) {
+    if (isNaN(p) || isNaN(q)) return;
+
+    const n_val = p * q;
+
+    // Validación: n debe ser mayor a 255 para soportar caracteres ASCII estándar
+    if (!isPrime(p) || !isPrime(q) || n_val <= 255) {
         warningMsg.classList.remove('hidden');
+        outCTotal.textContent = "Error de parámetros";
+        outMDec.textContent = "-";
+        return;
     } else {
         warningMsg.classList.add('hidden');
     }
 
-    if (isNaN(p) || isNaN(q) || isNaN(M_val)) return;
-
-    // Uso de BigInt para precisión matemática
     const p_big = BigInt(p);
     const q_big = BigInt(q);
-    const M = BigInt(M_val);
-
-    // Paso 1: n y φ(n)
     const n = p_big * q_big;
     const phi = (p_big - 1n) * (q_big - 1n);
 
     outN.textContent = n.toString();
     outPhi.textContent = phi.toString();
 
-    // Actualizar selector de 'e' si cambia φ(n)
     populateESelect(phi);
     
-    // Si no hay 'e' seleccionado, detenemos el cálculo
     if (!eSelect.value) return;
-    
     const e = BigInt(eSelect.value);
 
-    // Validación del Mensaje M < n
-    if (M >= n) {
-        outC.textContent = "Error: M debe ser menor que n";
-        outMDec.textContent = "-";
-        return;
-    }
-
-    // Calcular d (inverso modular)
     try {
         const d = modInverse(e, phi);
         outD.textContent = d.toString();
 
-        // Paso 2: Cifrado (C = M^e mod n)
-        const C = modPow(M, e, n);
-        outC.textContent = C.toString();
+        if (textMsg.length === 0) {
+            outCTotal.textContent = "-";
+            outMDec.textContent = "-";
+            return;
+        }
 
-        // Paso 3: Descifrado (M_dec = C^d mod n)
-        const M_dec = modPow(C, d, n);
-        outMDec.textContent = M_dec.toString();
+        // PROCESO DE CIFRADO
+        let encryptedHexArray = [];
+        let encryptedBigIntArray = []; // Para usar en el descifrado
+
+        for (let i = 0; i < textMsg.length; i++) {
+            // 1. Convertir letra a valor numérico (ASCII)
+            const charCode = BigInt(textMsg.charCodeAt(i));
+            
+            // 2. Aplicar fórmula matemática: C = M^e mod n
+            const encryptedCharNum = modPow(charCode, e, n);
+            encryptedBigIntArray.push(encryptedCharNum);
+            
+            // 3. Convertir el número a Hexadecimal para que luzca como código
+            encryptedHexArray.push(encryptedCharNum.toString(16).toUpperCase());
+        }
+
+        // Mostrar el mensaje cifrado total unido por guiones
+        outCTotal.textContent = encryptedHexArray.join('-');
+
+        // PROCESO DE DESCIFRADO
+        let decryptedText = "";
+        
+        for (let i = 0; i < encryptedBigIntArray.length; i++) {
+            // 1. Aplicar fórmula inversa: M = C^d mod n
+            const decryptedCharNum = modPow(encryptedBigIntArray[i], d, n);
+            
+            // 2. Convertir el número de vuelta a su letra correspondiente
+            decryptedText += String.fromCharCode(Number(decryptedCharNum));
+        }
+
+        // Mostrar el texto reconstruido
+        outMDec.textContent = decryptedText;
         
     } catch (error) {
-        outD.textContent = "Error en el cálculo";
+        outD.textContent = "Error";
+        outCTotal.textContent = "Error matemático en el procesamiento.";
     }
 }
 
 function populateESelect(phi) {
-    // Guardar el valor actual para no perderlo si aún es válido
     const currentE = eSelect.value;
     eSelect.innerHTML = '';
-
     let optionsAdded = 0;
-    // Buscamos candidatos para 'e' (1 < e < phi, coprimos con phi)
-    // Limitamos a 50 opciones para no sobrecargar el selector
-    for (let i = 2n; i < phi && optionsAdded < 50; i++) {
+
+    for (let i = 2n; i < phi && optionsAdded < 30; i++) {
         if (gcd(i, phi) === 1n) {
             const option = document.createElement('option');
             option.value = i.toString();
@@ -139,22 +155,16 @@ function populateESelect(phi) {
         }
     }
 
-    // Intentar mantener la selección anterior si es posible
     if (currentE && Array.from(eSelect.options).some(opt => opt.value === currentE)) {
         eSelect.value = currentE;
-    } else {
-        // Seleccionar un 'e' tradicional si está disponible (ej. 65537, o el primer candidato)
-        if(eSelect.options.length > 0){
-            eSelect.selectedIndex = 0;
-        }
+    } else if (eSelect.options.length > 0) {
+        eSelect.selectedIndex = eSelect.options.length - 1; // Elegir un e alto por defecto
     }
 }
 
-// Listeners de Eventos
 pInput.addEventListener('input', updateRSA);
 qInput.addEventListener('input', updateRSA);
 mInput.addEventListener('input', updateRSA);
 eSelect.addEventListener('change', updateRSA);
 
-// Inicialización
 updateRSA();
