@@ -8,41 +8,41 @@
 </head>
 <body>
     <div class="container">
-        <h1>Calculadora RSA</h1>
+        <h1>Calculadora RSA (Modo Texto)</h1>
         
         <div class="input-section">
             <div class="input-group">
-                <label for="p-input">Primo p:</label>
-                <input type="number" id="p-input" value="11" min="2">
+                <label for="p-input">Primo p (sugerido > 17):</label>
+                <input type="number" id="p-input" value="47" min="2">
             </div>
             <div class="input-group">
-                <label for="q-input">Primo q:</label>
-                <input type="number" id="q-input" value="13" min="2">
+                <label for="q-input">Primo q (sugerido > 17):</label>
+                <input type="number" id="q-input" value="53" min="2">
             </div>
-            <div class="input-group">
-                <label for="m-input">Mensaje M (entero):</label>
-                <input type="number" id="m-input" value="7" min="0">
+            <div class="input-group input-span-2">
+                <label for="m-input">Mensaje a Encriptar (Texto):</label>
+                <input type="text" id="m-input" value="JORGE">
             </div>
-            <div class="input-group">
+            <div class="input-group input-span-2">
                 <label for="e-select">Clave pública e:</label>
                 <select id="e-select"></select>
             </div>
-            <div id="warning-msg" class="warning hidden">¡Atención! p y q deben ser números primos.</div>
+            <div id="warning-msg" class="warning hidden">¡Atención! p y q deben ser primos, y n debe ser mayor a 255.</div>
         </div>
 
         <div class="output-section">
             <h2>Paso 1: Generación de Claves</h2>
             <p>Módulo <strong>n</strong> (p &times; q): <span id="out-n">-</span></p>
-            <p>Función de Euler <strong>&phi;(n)</strong> ((p-1) &times; (q-1)): <span id="out-phi">-</span></p>
-            <p>Clave Privada <strong>d</strong> (inverso modular de e mod &phi;(n)): <span id="out-d">-</span></p>
+            <p>Función de Euler <strong>&phi;(n)</strong>: <span id="out-phi">-</span></p>
+            <p>Clave Privada <strong>d</strong>: <span id="out-d">-</span></p>
 
-            <h2>Paso 2: Cifrado</h2>
-            <p>Fórmula: C = M<sup>e</sup> mod n</p>
-            <p>Mensaje Cifrado <strong>C</strong>: <span id="out-c" class="highlight">-</span></p>
+            <h2>Paso 2: Cifrado (Bloque a Bloque)</h2>
+            <p>Fórmula aplicada a cada letra: C<sub>i</sub> = M<sub>i</sub><sup>e</sup> mod n</p>
+            <p>Criptograma (Hexadecimal): <br><span id="out-c" class="crypto-box">-</span></p>
 
             <h2>Paso 3: Descifrado</h2>
-            <p>Fórmula: M = C<sup>d</sup> mod n</p>
-            <p>Mensaje Original Descifrado: <span id="out-m-dec" class="highlight">-</span></p>
+            <p>Fórmula de reversión: M<sub>i</sub> = C<sub>i</sub><sup>d</sup> mod n</p>
+            <p>Mensaje Original Descifrado: <br><span id="out-m-dec" class="crypto-box success">-</span></p>
         </div>
     </div>
 
