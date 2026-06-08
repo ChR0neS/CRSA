@@ -3,130 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratorio RSA Interactivo</title>
+    <title>Calculadora Interactiva RSA</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <div class="card dark-panel">
-            <table class="math-table">
-                <thead>
-                    <tr>
-                        <th>Paso</th>
-                        <th>Descripción</th>
-                        <th>Resultado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1. Primalidad</td>
-                        <td>¿Son p y q primos válidos?</td>
-                        <td id="res-prim">✅ Sí</td>
-                    </tr>
-                    <tr>
-                        <td>2. Módulo (n)</td>
-                        <td>\( n = p \times q \)</td>
-                        <td id="res-n">11 &times; 13 = 143</td>
-                    </tr>
-                    <tr>
-                        <td>3. Totiente (\(\phi\))</td>
-                        <td>\( \phi(n) = (p-1) \times (q-1) \)</td>
-                        <td id="res-phi">10 &times; 12 = 120</td>
-                    </tr>
-                    <tr>
-                        <td>4. Exponente (e)</td>
-                        <td>Clave pública: \( \gcd(e, \phi(n)) = 1 \)</td>
-                        <td id="res-e">✅ 7 es válido</td>
-                    </tr>
-                    <tr>
-                        <td>5. Inverso (d)</td>
-                        <td>\( d \equiv e^{-1} \pmod{\phi(n)} \)</td>
-                        <td id="res-d-step">103</td>
-                    </tr>
-                    <tr>
-                        <td>6. Cifrado</td>
-                        <td>\( C \equiv M^e \pmod n \)</td>
-                        <td id="res-c">7^7 mod 143 = 6</td>
-                    </tr>
-                    <tr>
-                        <td>7. Descifrado</td>
-                        <td>\( M \equiv C^d \pmod n \)</td>
-                        <td id="res-m-step">6^103 mod 143 = 7</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="divider"></div>
-
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <span class="label">n (p*q)</span>
-                    <span class="value" id="sum-n">143</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">\(\phi(n)\)</span>
-                    <span class="value" id="sum-phi">120</span>
-                </div>
-                <div class="summary-item">
-                    <span class="label">d (privada)</span>
-                    <span class="value" id="sum-d">103</span>
-                </div>
+        <h1>Calculadora RSA</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="p-input">Primo p:</label>
+                <input type="number" id="p-input" value="11" min="2">
             </div>
-
-            <div class="controls-grid">
-                <div class="control-row">
-                    <label>Primo p</label>
-                    <div class="stepper">
-                        <button class="btn-step" id="btn-p-minus">&minus;</button>
-                        <input type="number" id="p-input" value="11">
-                        <button class="btn-step" id="btn-p-plus">+</button>
-                    </div>
-                </div>
-                <div class="control-row">
-                    <label>Primo q</label>
-                    <div class="stepper">
-                        <button class="btn-step" id="btn-q-minus">&minus;</button>
-                        <input type="number" id="q-input" value="13">
-                        <button class="btn-step" id="btn-q-plus">+</button>
-                    </div>
-                </div>
-                <div class="control-row">
-                    <label>Mensaje M</label>
-                    <div class="stepper">
-                        <button class="btn-step" id="btn-m-minus">&minus;</button>
-                        <input type="number" id="m-num-input" value="7">
-                        <button class="btn-step" id="btn-m-plus">+</button>
-                    </div>
-                </div>
-                <div class="control-row e-row">
-                    <label>Exponente público e</label>
-                    <select id="e-select" class="dark-select"></select>
-                </div>
+            <div class="input-group">
+                <label for="q-input">Primo q:</label>
+                <input type="number" id="q-input" value="13" min="2">
             </div>
+            <div class="input-group">
+                <label for="m-input">Mensaje M (entero):</label>
+                <input type="number" id="m-input" value="7" min="0">
+            </div>
+            <div class="input-group">
+                <label for="e-select">Clave pública e:</label>
+                <select id="e-select"></select>
+            </div>
+            <div id="warning-msg" class="warning hidden">¡Atención! p y q deben ser números primos.</div>
         </div>
 
-        <div class="card block-2" id="block-2">
-            <h2>Bloque 2: Motor de Encriptación de Texto</h2>
-            <p class="subtitle">Utilizando las llaves generadas: Pública (<span id="lbl-e">7</span>, <span id="lbl-n1">143</span>) | Privada (<span id="lbl-d">103</span>, <span id="lbl-n2">143</span>)</p>
-            
-            <div id="ascii-warning" class="warning hidden">
-                ⚠️ El módulo n es muy pequeño para abarcar toda la tabla ASCII. Sube el valor de p y q en el Bloque 1 (n debe ser > 255).
-            </div>
+        <div class="output-section">
+            <h2>Paso 1: Generación de Claves</h2>
+            <p>Módulo <strong>n</strong> (p &times; q): <span id="out-n">-</span></p>
+            <p>Función de Euler <strong>&phi;(n)</strong> ((p-1) &times; (q-1)): <span id="out-phi">-</span></p>
+            <p>Clave Privada <strong>d</strong> (inverso modular de e mod &phi;(n)): <span id="out-d">-</span></p>
 
-            <div class="input-group full-width">
-                <input type="text" id="text-input" value="HOLA" placeholder="Escribe el mensaje aquí...">
-            </div>
+            <h2>Paso 2: Cifrado</h2>
+            <p>Fórmula: C = M<sup>e</sup> mod n</p>
+            <p>Mensaje Cifrado <strong>C</strong>: <span id="out-c" class="highlight">-</span></p>
 
-            <div class="results-grid">
-                <div class="result-box">
-                    <label>Mensaje Encriptado (Total):</label>
-                    <div id="out-encrypted" class="crypto-text encrypted">-</div>
-                </div>
-            </div>
+            <h2>Paso 3: Descifrado</h2>
+            <p>Fórmula: M = C<sup>d</sup> mod n</p>
+            <p>Mensaje Original Descifrado: <span id="out-m-dec" class="highlight">-</span></p>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
