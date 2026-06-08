@@ -1,4 +1,4 @@
-// Funciones Matemáticas Auxiliares
+// Funciones Matemáticas Auxiliares (Se mantienen igual)
 function isPrime(num) {
     if (num <= 1) return false;
     if (num <= 3) return true;
@@ -18,7 +18,6 @@ function gcd(a, b) {
     return a;
 }
 
-// Algoritmo de Euclides Extendido para Inverso Modular
 function modInverse(a, m) {
     let m0 = m;
     let y = 0n, x = 1n;
@@ -36,7 +35,6 @@ function modInverse(a, m) {
     return x;
 }
 
-// Exponenciación Modular Rápida: (base^exp) % mod
 function modPow(base, exp, mod) {
     let res = 1n;
     base = base % mod;
@@ -65,21 +63,24 @@ const outMDec = document.getElementById('out-m-dec');
 function updateRSA() {
     const p = parseInt(pInput.value);
     const q = parseInt(qInput.value);
-    const M_val = parseInt(mInput.value);
+    const textMsg = mInput.value;
 
-    // Validación de Primos
-    if (!isPrime(p) || !isPrime(q)) {
+    const n_val = p * q;
+
+    // Validación de Primos y tamaño de módulo (> 255 para ASCII)
+    if (!isPrime(p) || !isPrime(q) || n_val <= 255) {
         warningMsg.classList.remove('hidden');
+        outC.textContent = "Error de parámetros";
+        outMDec.textContent = "-";
+        return;
     } else {
         warningMsg.classList.add('hidden');
     }
 
-    if (isNaN(p) || isNaN(q) || isNaN(M_val)) return;
+    if (isNaN(p) || isNaN(q)) return;
 
-    // Uso de BigInt para precisión matemática
     const p_big = BigInt(p);
     const q_big = BigInt(q);
-    const M = BigInt(M_val);
 
     // Paso 1: n y φ(n)
     const n = p_big * q_big;
@@ -88,33 +89,41 @@ function updateRSA() {
     outN.textContent = n.toString();
     outPhi.textContent = phi.toString();
 
-    // Actualizar selector de 'e' si cambia φ(n)
     populateESelect(phi);
-    
-    // Si no hay 'e' seleccionado, detenemos el cálculo
     if (!eSelect.value) return;
-    
     const e = BigInt(eSelect.value);
 
-    // Validación del Mensaje M < n
-    if (M >= n) {
-        outC.textContent = "Error: M debe ser menor que n";
-        outMDec.textContent = "-";
-        return;
-    }
-
-    // Calcular d (inverso modular)
     try {
         const d = modInverse(e, phi);
         outD.textContent = d.toString();
 
-        // Paso 2: Cifrado (C = M^e mod n)
-        const C = modPow(M, e, n);
-        outC.textContent = C.toString();
+        if (textMsg.length === 0) {
+            outC.textContent = "-";
+            outMDec.textContent = "-";
+            return;
+        }
 
-        // Paso 3: Descifrado (M_dec = C^d mod n)
-        const M_dec = modPow(C, d, n);
-        outMDec.textContent = M_dec.toString();
+        let encryptedHexArray = [];
+        let decryptedText = "";
+
+        // Procesamiento de la matriz de caracteres
+        for (let i = 0; i < textMsg.length; i++) {
+            // 1. Mapeo a Entero (ASCII)
+            const m_char = BigInt(textMsg.charCodeAt(i));
+            
+            // 2. Cifrado Numérico
+            const c_char = modPow(m_char, e, n);
+            
+            // Guardar para visualización
+            encryptedHexArray.push(c_char.toString(16).toUpperCase().padStart(3, '0'));
+
+            // 3. Descifrado Numérico Inmediato
+            const m_decrypted = modPow(c_char, d, n);
+            decryptedText += String.fromCharCode(Number(m_decrypted));
+        }
+
+        outC.textContent = encryptedHexArray.join('-');
+        outMDec.textContent = decryptedText;
         
     } catch (error) {
         outD.textContent = "Error en el cálculo";
@@ -122,14 +131,11 @@ function updateRSA() {
 }
 
 function populateESelect(phi) {
-    // Guardar el valor actual para no perderlo si aún es válido
     const currentE = eSelect.value;
     eSelect.innerHTML = '';
-
     let optionsAdded = 0;
-    // Buscamos candidatos para 'e' (1 < e < phi, coprimos con phi)
-    // Limitamos a 50 opciones para no sobrecargar el selector
-    for (let i = 2n; i < phi && optionsAdded < 50; i++) {
+
+    for (let i = 2n; i < phi && optionsAdded < 30; i++) {
         if (gcd(i, phi) === 1n) {
             const option = document.createElement('option');
             option.value = i.toString();
@@ -139,14 +145,10 @@ function populateESelect(phi) {
         }
     }
 
-    // Intentar mantener la selección anterior si es posible
     if (currentE && Array.from(eSelect.options).some(opt => opt.value === currentE)) {
         eSelect.value = currentE;
-    } else {
-        // Seleccionar un 'e' tradicional si está disponible (ej. 65537, o el primer candidato)
-        if(eSelect.options.length > 0){
-            eSelect.selectedIndex = 0;
-        }
+    } else if(eSelect.options.length > 0){
+        eSelect.selectedIndex = eSelect.options.length - 1;
     }
 }
 
