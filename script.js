@@ -1,4 +1,4 @@
-// Funciones Matemáticas Auxiliares
+// --- FUNCIONES MATEMÁTICAS ---
 function isPrime(num) {
     if (num <= 1) return false;
     if (num <= 3) return true;
@@ -46,125 +46,159 @@ function modPow(base, exp, mod) {
     return res;
 }
 
-// Elementos del DOM
+// --- REFERENCIAS DOM ---
 const pInput = document.getElementById('p-input');
 const qInput = document.getElementById('q-input');
-const mInput = document.getElementById('m-input');
 const eSelect = document.getElementById('e-select');
-const warningMsg = document.getElementById('warning-msg');
+const textInput = document.getElementById('text-input');
 
-const outN = document.getElementById('out-n');
-const outPhi = document.getElementById('out-phi');
-const outD = document.getElementById('out-d');
-const outCTotal = document.getElementById('out-c-total');
-const outMDec = document.getElementById('out-m-dec');
+const mathWarning = document.getElementById('math-warning');
+const asciiWarning = document.getElementById('ascii-warning');
+const block2 = document.getElementById('block-2');
 
-function updateRSA() {
+// Tablas y Labels
+const tdN = document.getElementById('td-n');
+const tdPhi = document.getElementById('td-phi');
+const tdD = document.getElementById('td-d');
+const lblE = document.getElementById('lbl-e');
+const lblN1 = document.getElementById('lbl-n1');
+const lblD = document.getElementById('lbl-d');
+const lblN2 = document.getElementById('lbl-n2');
+
+// Salidas
+const outEncrypted = document.getElementById('out-encrypted');
+const outDecrypted = document.getElementById('out-decrypted');
+
+// Variables Globales del Sistema
+let global_n, global_e, global_d;
+
+// --- LÓGICA PRINCIPAL ---
+function updateSystem() {
     const p = parseInt(pInput.value);
     const q = parseInt(qInput.value);
-    const textMsg = mInput.value;
-
+    
     if (isNaN(p) || isNaN(q)) return;
 
-    const n_val = p * q;
-
-    // Validación: n debe ser mayor a 255 para soportar caracteres ASCII estándar
-    if (!isPrime(p) || !isPrime(q) || n_val <= 255) {
-        warningMsg.classList.remove('hidden');
-        outCTotal.textContent = "Error de parámetros";
-        outMDec.textContent = "-";
+    // Validación de Primos
+    if (!isPrime(p) || !isPrime(q)) {
+        mathWarning.classList.remove('hidden');
+        disableBlock2(true);
         return;
     } else {
-        warningMsg.classList.add('hidden');
+        mathWarning.classList.add('hidden');
     }
 
     const p_big = BigInt(p);
     const q_big = BigInt(q);
-    const n = p_big * q_big;
+    global_n = p_big * q_big;
     const phi = (p_big - 1n) * (q_big - 1n);
 
-    outN.textContent = n.toString();
-    outPhi.textContent = phi.toString();
+    // Actualizar Tabla de Matemáticas
+    tdN.textContent = global_n.toString();
+    tdPhi.textContent = phi.toString();
 
+    // Llenar 'e' y mantener valor si es posible
     populateESelect(phi);
-    
     if (!eSelect.value) return;
-    const e = BigInt(eSelect.value);
+    
+    global_e = BigInt(eSelect.value);
 
     try {
-        const d = modInverse(e, phi);
-        outD.textContent = d.toString();
-
-        if (textMsg.length === 0) {
-            outCTotal.textContent = "-";
-            outMDec.textContent = "-";
-            return;
-        }
-
-        // PROCESO DE CIFRADO
-        let encryptedHexArray = [];
-        let encryptedBigIntArray = []; // Para usar en el descifrado
-
-        for (let i = 0; i < textMsg.length; i++) {
-            // 1. Convertir letra a valor numérico (ASCII)
-            const charCode = BigInt(textMsg.charCodeAt(i));
-            
-            // 2. Aplicar fórmula matemática: C = M^e mod n
-            const encryptedCharNum = modPow(charCode, e, n);
-            encryptedBigIntArray.push(encryptedCharNum);
-            
-            // 3. Convertir el número a Hexadecimal para que luzca como código
-            encryptedHexArray.push(encryptedCharNum.toString(16).toUpperCase());
-        }
-
-        // Mostrar el mensaje cifrado total unido por guiones
-        outCTotal.textContent = encryptedHexArray.join('-');
-
-        // PROCESO DE DESCIFRADO
-        let decryptedText = "";
+        global_d = modInverse(global_e, phi);
+        tdD.textContent = global_d.toString();
         
-        for (let i = 0; i < encryptedBigIntArray.length; i++) {
-            // 1. Aplicar fórmula inversa: M = C^d mod n
-            const decryptedCharNum = modPow(encryptedBigIntArray[i], d, n);
+        // Comprobar si N soporta ASCII
+        if (global_n <= 255n) {
+            asciiWarning.classList.remove('hidden');
+            disableBlock2(true);
+        } else {
+            asciiWarning.classList.add('hidden');
+            disableBlock2(false);
             
-            // 2. Convertir el número de vuelta a su letra correspondiente
-            decryptedText += String.fromCharCode(Number(decryptedCharNum));
-        }
+            // Actualizar credenciales visuales en Bloque 2
+            lblE.textContent = global_e.toString();
+            lblD.textContent = global_d.toString();
+            lblN1.textContent = global_n.toString();
+            lblN2.textContent = global_n.toString();
 
-        // Mostrar el texto reconstruido
-        outMDec.textContent = decryptedText;
-        
+            // Ejecutar cifrado de texto
+            processText();
+        }
     } catch (error) {
-        outD.textContent = "Error";
-        outCTotal.textContent = "Error matemático en el procesamiento.";
+        tdD.textContent = "Error";
     }
+}
+
+function processText() {
+    const text = textInput.value;
+    if (!text || global_n <= 255n) {
+        outEncrypted.textContent = "-";
+        outDecrypted.textContent = "-";
+        return;
+    }
+
+    let encryptedHex = [];
+    let encryptedBigInts = [];
+    let decryptedText = "";
+
+    // Proceso de Cifrado
+    for (let i = 0; i < text.length; i++) {
+        const charCode = BigInt(text.charCodeAt(i));
+        const cipherNum = modPow(charCode, global_e, global_n);
+        encryptedBigInts.push(cipherNum);
+        
+        // Formatear a Hexadecimal de 3 dígitos con ceros a la izquierda
+        let hex = cipherNum.toString(16).toUpperCase();
+        hex = hex.padStart(3, '0');
+        encryptedHex.push(hex);
+    }
+    outEncrypted.textContent = encryptedHex.join(' ');
+
+    // Proceso de Descifrado
+    for (let i = 0; i < encryptedBigInts.length; i++) {
+        const plainNum = modPow(encryptedBigInts[i], global_d, global_n);
+        decryptedText += String.fromCharCode(Number(plainNum));
+    }
+    outDecrypted.textContent = decryptedText;
 }
 
 function populateESelect(phi) {
     const currentE = eSelect.value;
     eSelect.innerHTML = '';
-    let optionsAdded = 0;
+    let count = 0;
 
-    for (let i = 2n; i < phi && optionsAdded < 30; i++) {
+    for (let i = 2n; i < phi && count < 30; i++) {
         if (gcd(i, phi) === 1n) {
-            const option = document.createElement('option');
-            option.value = i.toString();
-            option.textContent = i.toString();
-            eSelect.appendChild(option);
-            optionsAdded++;
+            const opt = document.createElement('option');
+            opt.value = i.toString();
+            opt.textContent = i.toString();
+            eSelect.appendChild(opt);
+            count++;
         }
     }
 
-    if (currentE && Array.from(eSelect.options).some(opt => opt.value === currentE)) {
+    if (currentE && Array.from(eSelect.options).some(o => o.value === currentE)) {
         eSelect.value = currentE;
     } else if (eSelect.options.length > 0) {
-        eSelect.selectedIndex = eSelect.options.length - 1; // Elegir un e alto por defecto
+        eSelect.selectedIndex = Math.floor(eSelect.options.length / 2); // Elegir un 'e' intermedio
     }
 }
 
-pInput.addEventListener('input', updateRSA);
-qInput.addEventListener('input', updateRSA);
-mInput.addEventListener('input', updateRSA);
-eSelect.addEventListener('change', updateRSA);
+function disableBlock2(disable) {
+    if (disable) {
+        block2.classList.add('disabled-block');
+        lblE.textContent = "-"; lblN1.textContent = "-";
+        lblD.textContent = "-"; lblN2.textContent = "-";
+    } else {
+        block2.classList.remove('disabled-block');
+    }
+}
 
-updateRSA();
+// Listeners
+pInput.addEventListener('input', updateSystem);
+qInput.addEventListener('input', updateSystem);
+eSelect.addEventListener('change', updateSystem);
+textInput.addEventListener('input', processText); // Solo procesar texto al escribir
+
+// Iniciar
+updateSystem();
