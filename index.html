@@ -3,51 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cifrador RSA de Texto Completo</title>
+    <title>Laboratorio RSA Interactivo</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Cifrador RSA de Texto</h1>
-        
-        <div class="input-section">
-            <div class="input-group">
-                <label for="p-input">Primo p (sugerido > 17):</label>
-                <input type="number" id="p-input" value="47" min="2">
+        <h1>Laboratorio de Criptografía RSA</h1>
+
+        <div class="card block-1">
+            <div class="card-header">
+                <h2>Bloque 1: Generación de Claves (Aritmética Modular)</h2>
             </div>
-            <div class="input-group">
-                <label for="q-input">Primo q (sugerido > 17):</label>
-                <input type="number" id="q-input" value="53" min="2">
+            <div class="card-body">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Primo p:</label>
+                        <input type="number" id="p-input" value="47" min="2">
+                    </div>
+                    <div class="input-group">
+                        <label>Primo q:</label>
+                        <input type="number" id="q-input" value="53" min="2">
+                    </div>
+                    <div class="input-group">
+                        <label>Exponente e:</label>
+                        <select id="e-select"></select>
+                    </div>
+                </div>
+
+                <div id="math-warning" class="warning hidden">Error: p y q deben ser primos válidos.</div>
+
+                <table class="math-table">
+                    <tr>
+                        <th>Paso</th>
+                        <th>Descripción</th>
+                        <th>Resultado</th>
+                    </tr>
+                    <tr>
+                        <td>1. Módulo</td>
+                        <td>n = p &times; q</td>
+                        <td id="td-n" class="highlight">-</td>
+                    </tr>
+                    <tr>
+                        <td>2. Totiente</td>
+                        <td>&phi;(n) = (p-1) &times; (q-1)</td>
+                        <td id="td-phi">-</td>
+                    </tr>
+                    <tr>
+                        <td>3. Inverso</td>
+                        <td>d &equiv; e&spadesuit;&sup1; (mod &phi;(n))</td>
+                        <td id="td-d" class="highlight">-</td>
+                    </tr>
+                </table>
             </div>
-            <div class="input-group full-width">
-                <label for="m-input">Texto a Encriptar:</label>
-                <input type="text" id="m-input" value="RSA EN ACCION" placeholder="Escribe tu mensaje aquí...">
-            </div>
-            <div class="input-group full-width">
-                <label for="e-select">Clave Pública (e):</label>
-                <select id="e-select"></select>
-            </div>
-            <div id="warning-msg" class="warning hidden">¡Atención! p y q deben ser primos, y n debe ser mayor a 255.</div>
         </div>
 
-        <div class="output-section">
-            <h2>Parámetros de Clave</h2>
-            <div class="math-grid">
-                <p><strong>n:</strong> <span id="out-n">-</span></p>
-                <p><strong>&phi;(n):</strong> <span id="out-phi">-</span></p>
-                <p><strong>Clave Privada (d):</strong> <span id="out-d">-</span></p>
+        <div class="card block-2" id="block-2">
+            <div class="card-header">
+                <h2>Bloque 2: Cifrado de Texto (Aplicación)</h2>
             </div>
+            <div class="card-body">
+                <div id="ascii-warning" class="warning hidden">
+                    <strong>Espacio modular insuficiente:</strong> Para cifrar texto, el módulo n debe ser mayor a 255 (el tamaño de la tabla ASCII). Aumenta p o q en el Bloque 1.
+                </div>
 
-            <h2>Mensaje Encriptado (Total)</h2>
-            <p class="subtitle">Representación en formato Hexadecimal bloque por bloque:</p>
-            <div id="out-c-total" class="crypto-box">-</div>
+                <div class="keys-display">
+                    <div class="key-badge public">
+                        <span>Clave Pública Usada:</span>
+                        <strong>(<span id="lbl-e"></span>, <span id="lbl-n1"></span>)</strong>
+                    </div>
+                    <div class="key-badge private">
+                        <span>Clave Privada Usada:</span>
+                        <strong>(<span id="lbl-d"></span>, <span id="lbl-n2"></span>)</strong>
+                    </div>
+                </div>
 
-            <h2>Mensaje Descifrado</h2>
-            <p class="subtitle">Reversión del algoritmo a texto plano:</p>
-            <div id="out-m-dec" class="crypto-box success">-</div>
+                <div class="input-group full-width">
+                    <label>Escribe el mensaje a encriptar:</label>
+                    <input type="text" id="text-input" value="USIL 2026" placeholder="Ingresa texto plano...">
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-box">
+                        <label>Mensaje Encriptado (Hex):</label>
+                        <div id="out-encrypted" class="crypto-text encrypted">-</div>
+                    </div>
+                    <div class="result-box">
+                        <label>Mensaje Descifrado:</label>
+                        <div id="out-decrypted" class="crypto-text decrypted">-</div>
+                    </div>
+                </div>
+            </div>
         </div>
+
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
