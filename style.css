@@ -1,10 +1,11 @@
 :root {
     --primary-color: #2c3e50;
-    --accent-color: #3498db;
-    --bg-color: #f8f9fa;
+    --accent-color: #e74c3c;
+    --success-color: #27ae60;
+    --bg-color: #ecf0f1;
     --box-bg: #ffffff;
     --text-color: #333333;
-    --border-color: #e0e0e0;
+    --border-color: #bdc3c7;
 }
 
 body {
@@ -20,17 +21,17 @@ body {
 
 .container {
     background-color: var(--box-bg);
-    max-width: 600px;
+    max-width: 700px;
     width: 100%;
     padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 
 h1 {
     text-align: center;
     color: var(--primary-color);
-    border-bottom: 2px solid var(--accent-color);
+    border-bottom: 3px solid var(--accent-color);
     padding-bottom: 10px;
 }
 
@@ -54,29 +55,34 @@ h2 {
     flex-direction: column;
 }
 
+.full-width {
+    grid-column: span 2;
+}
+
 label {
     font-weight: bold;
     margin-bottom: 5px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 input, select {
-    padding: 8px;
+    padding: 10px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 1rem;
+    font-family: monospace;
 }
 
 input:focus, select:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
 }
 
 .warning {
     grid-column: span 2;
     background-color: #fee2e2;
-    color: #ef4444;
+    color: #c0392b;
     padding: 10px;
     border-radius: 5px;
     text-align: center;
@@ -87,16 +93,41 @@ input:focus, select:focus {
     display: none;
 }
 
-.output-section p {
-    margin: 8px 0;
+.math-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     background: var(--bg-color);
-    padding: 10px;
+    padding: 15px;
     border-radius: 5px;
-    border-left: 4px solid var(--primary-color);
+    text-align: center;
 }
 
-.highlight {
+.math-grid p {
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: -5px;
+    margin-bottom: 10px;
+}
+
+.crypto-box {
+    background-color: #1e272e;
+    color: #0fb9b1;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 15px;
+    border-radius: 5px;
+    word-wrap: break-word;
+    font-size: 1.2rem;
     font-weight: bold;
-    color: var(--accent-color);
-    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.crypto-box.success {
+    background-color: #f1f8e9;
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
 }
