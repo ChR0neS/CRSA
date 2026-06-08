@@ -1,4 +1,4 @@
-// --- FUNCIONES MATEMÁTICAS ---
+// Funciones Matemáticas Auxiliares
 function isPrime(num) {
     if (num <= 1) return false;
     if (num <= 3) return true;
@@ -18,6 +18,7 @@ function gcd(a, b) {
     return a;
 }
 
+// Algoritmo de Euclides Extendido para Inverso Modular
 function modInverse(a, m) {
     let m0 = m;
     let y = 0n, x = 1n;
@@ -35,6 +36,7 @@ function modInverse(a, m) {
     return x;
 }
 
+// Exponenciación Modular Rápida: (base^exp) % mod
 function modPow(base, exp, mod) {
     let res = 1n;
     base = base % mod;
@@ -46,190 +48,113 @@ function modPow(base, exp, mod) {
     return res;
 }
 
-// --- REFERENCIAS DOM BLOQUE 1 ---
+// Elementos del DOM
 const pInput = document.getElementById('p-input');
 const qInput = document.getElementById('q-input');
-const mNumInput = document.getElementById('m-num-input');
+const mInput = document.getElementById('m-input');
 const eSelect = document.getElementById('e-select');
+const warningMsg = document.getElementById('warning-msg');
 
-// Celdas de la tabla
-const resPrim = document.getElementById('res-prim');
-const resN = document.getElementById('res-n');
-const resPhi = document.getElementById('res-phi');
-const resE = document.getElementById('res-e');
-const resDStep = document.getElementById('res-d-step');
-const resC = document.getElementById('res-c');
-const resMStep = document.getElementById('res-m-step');
+const outN = document.getElementById('out-n');
+const outPhi = document.getElementById('out-phi');
+const outD = document.getElementById('out-d');
+const outC = document.getElementById('out-c');
+const outMDec = document.getElementById('out-m-dec');
 
-// Resumen inferior
-const sumN = document.getElementById('sum-n');
-const sumPhi = document.getElementById('sum-phi');
-const sumD = document.getElementById('sum-d');
-
-// --- REFERENCIAS DOM BLOQUE 2 ---
-const textInput = document.getElementById('text-input');
-const outEncrypted = document.getElementById('out-encrypted');
-const asciiWarning = document.getElementById('ascii-warning');
-const block2 = document.getElementById('block-2');
-
-const lblE = document.getElementById('lbl-e');
-const lblN1 = document.getElementById('lbl-n1');
-const lblD = document.getElementById('lbl-d');
-const lblN2 = document.getElementById('lbl-n2');
-
-let global_n, global_e, global_d;
-
-// --- CONTROLADORES DE BOTONES (+ / -) ---
-function setupStepper(inputId, minusId, plusId, callback) {
-    const input = document.getElementById(inputId);
-    document.getElementById(minusId).addEventListener('click', () => {
-        input.value = parseInt(input.value) - 1;
-        callback();
-    });
-    document.getElementById(plusId).addEventListener('click', () => {
-        input.value = parseInt(input.value) + 1;
-        callback();
-    });
-    input.addEventListener('input', callback);
-}
-
-setupStepper('p-input', 'btn-p-minus', 'btn-p-plus', updateSystem);
-setupStepper('q-input', 'btn-q-minus', 'btn-q-plus', updateSystem);
-setupStepper('m-num-input', 'btn-m-minus', 'btn-m-plus', updateSystem);
-eSelect.addEventListener('change', updateSystem);
-textInput.addEventListener('input', processText);
-
-// --- LÓGICA PRINCIPAL ---
-function updateSystem() {
+// Lógica Principal
+function updateRSA() {
     const p = parseInt(pInput.value);
     const q = parseInt(qInput.value);
-    const m_num = parseInt(mNumInput.value);
-    
-    if (isNaN(p) || isNaN(q) || isNaN(m_num)) return;
+    const M_val = parseInt(mInput.value);
 
-    const pIsPrime = isPrime(p);
-    const qIsPrime = isPrime(q);
-
-    // 1. Primalidad
-    if (pIsPrime && qIsPrime) {
-        resPrim.innerHTML = "✅ Sí";
-        resPrim.style.color = "#2ea043";
+    // Validación de Primos
+    if (!isPrime(p) || !isPrime(q)) {
+        warningMsg.classList.remove('hidden');
     } else {
-        resPrim.innerHTML = "❌ No (Revisa p y q)";
-        resPrim.style.color = "#f85149";
+        warningMsg.classList.add('hidden');
     }
 
+    if (isNaN(p) || isNaN(q) || isNaN(M_val)) return;
+
+    // Uso de BigInt para precisión matemática
     const p_big = BigInt(p);
     const q_big = BigInt(q);
-    const M_big = BigInt(m_num);
+    const M = BigInt(M_val);
 
-    global_n = p_big * q_big;
+    // Paso 1: n y φ(n)
+    const n = p_big * q_big;
     const phi = (p_big - 1n) * (q_big - 1n);
 
-    // 2 y 3. Módulo y Totiente
-    resN.innerHTML = `${p} &times; ${q} = ${global_n}`;
-    resPhi.innerHTML = `${p-1} &times; ${q-1} = ${phi}`;
-    
-    sumN.textContent = global_n.toString();
-    sumPhi.textContent = phi.toString();
+    outN.textContent = n.toString();
+    outPhi.textContent = phi.toString();
 
-    // Actualizar 'e'
+    // Actualizar selector de 'e' si cambia φ(n)
     populateESelect(phi);
+    
+    // Si no hay 'e' seleccionado, detenemos el cálculo
     if (!eSelect.value) return;
-    global_e = BigInt(eSelect.value);
+    
+    const e = BigInt(eSelect.value);
 
-    // 4. Exponente
-    if (gcd(global_e, phi) === 1n) {
-        resE.innerHTML = `✅ ${global_e} es válido`;
-    } else {
-        resE.innerHTML = `❌ Inválido`;
-    }
-
-    try {
-        global_d = modInverse(global_e, phi);
-        
-        // 5. Inverso (d)
-        resDStep.textContent = global_d.toString();
-        sumD.textContent = global_d.toString();
-
-        // 6. Cifrado Numérico (Bloque 1)
-        const C = modPow(M_big, global_e, global_n);
-        resC.innerHTML = `${m_num}<sup>${global_e}</sup> mod ${global_n} = ${C}`;
-
-        // 7. Descifrado Numérico (Bloque 1)
-        const M_dec = modPow(C, global_d, global_n);
-        resMStep.innerHTML = `${C}<sup>${global_d}</sup> mod ${global_n} = ${M_dec}`;
-
-        // Verificación de ASCII para Bloque 2
-        if (!pIsPrime || !qIsPrime) {
-            disableBlock2(true);
-        } else if (global_n <= 255n) {
-            asciiWarning.classList.remove('hidden');
-            disableBlock2(true);
-        } else {
-            asciiWarning.classList.add('hidden');
-            disableBlock2(false);
-            
-            lblE.textContent = global_e.toString();
-            lblD.textContent = global_d.toString();
-            lblN1.textContent = global_n.toString();
-            lblN2.textContent = global_n.toString();
-
-            processText();
-        }
-    } catch (error) {
-        resDStep.textContent = "Error";
-    }
-}
-
-function processText() {
-    const text = textInput.value;
-    if (!text || global_n <= 255n) {
-        outEncrypted.textContent = "-";
+    // Validación del Mensaje M < n
+    if (M >= n) {
+        outC.textContent = "Error: M debe ser menor que n";
+        outMDec.textContent = "-";
         return;
     }
 
-    let encryptedHex = [];
-    for (let i = 0; i < text.length; i++) {
-        const charCode = BigInt(text.charCodeAt(i));
-        const cipherNum = modPow(charCode, global_e, global_n);
-        let hex = cipherNum.toString(16).toUpperCase();
-        encryptedHex.push(hex.padStart(3, '0'));
+    // Calcular d (inverso modular)
+    try {
+        const d = modInverse(e, phi);
+        outD.textContent = d.toString();
+
+        // Paso 2: Cifrado (C = M^e mod n)
+        const C = modPow(M, e, n);
+        outC.textContent = C.toString();
+
+        // Paso 3: Descifrado (M_dec = C^d mod n)
+        const M_dec = modPow(C, d, n);
+        outMDec.textContent = M_dec.toString();
+        
+    } catch (error) {
+        outD.textContent = "Error en el cálculo";
     }
-    outEncrypted.textContent = encryptedHex.join(' ');
 }
 
 function populateESelect(phi) {
+    // Guardar el valor actual para no perderlo si aún es válido
     const currentE = eSelect.value;
     eSelect.innerHTML = '';
-    let count = 0;
 
-    for (let i = 2n; i < phi && count < 30; i++) {
+    let optionsAdded = 0;
+    // Buscamos candidatos para 'e' (1 < e < phi, coprimos con phi)
+    // Limitamos a 50 opciones para no sobrecargar el selector
+    for (let i = 2n; i < phi && optionsAdded < 50; i++) {
         if (gcd(i, phi) === 1n) {
-            const opt = document.createElement('option');
-            opt.value = i.toString();
-            opt.textContent = i.toString();
-            eSelect.appendChild(opt);
-            count++;
+            const option = document.createElement('option');
+            option.value = i.toString();
+            option.textContent = i.toString();
+            eSelect.appendChild(option);
+            optionsAdded++;
         }
     }
 
-    if (currentE && Array.from(eSelect.options).some(o => o.value === currentE)) {
+    // Intentar mantener la selección anterior si es posible
+    if (currentE && Array.from(eSelect.options).some(opt => opt.value === currentE)) {
         eSelect.value = currentE;
-    } else if (eSelect.options.length > 0) {
-        // En este diseño, por defecto elegimos el primer 'e' válido para replicar el "7" de la imagen
-        eSelect.selectedIndex = 0; 
-    }
-}
-
-function disableBlock2(disable) {
-    if (disable) {
-        block2.classList.add('disabled-block');
-        outEncrypted.textContent = "-";
     } else {
-        block2.classList.remove('disabled-block');
+        // Seleccionar un 'e' tradicional si está disponible (ej. 65537, o el primer candidato)
+        if(eSelect.options.length > 0){
+            eSelect.selectedIndex = 0;
+        }
     }
 }
 
-// Inicializar
-updateSystem();
+// Listeners de Eventos
+pInput.addEventListener('input', updateRSA);
+qInput.addEventListener('input', updateRSA);
+mInput.addEventListener('input', updateRSA);
+eSelect.addEventListener('change', updateRSA);
+
+// Inicialización
+updateRSA();
