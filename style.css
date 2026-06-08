@@ -1,15 +1,19 @@
 :root {
-    --primary-color: #2c3e50;
-    --accent-color: #3498db;
-    --bg-color: #f8f9fa;
-    --box-bg: #ffffff;
-    --text-color: #333333;
-    --border-color: #e0e0e0;
+    --primary-color: #6d1f2f;  
+    --accent-color: #a63d50;    
+    --bg-color: #f6eef0;        
+    --box-bg: #fffafb;          
+    --text-color: #2d2527;     
+    --border-color: #d9c3c8;    
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-color);
+    background: linear-gradient(
+        135deg,
+        #f6eef0 0%,
+        #f1e4e7 100%
+    );
     color: var(--text-color);
     line-height: 1.6;
     margin: 0;
@@ -23,76 +27,48 @@ body {
     max-width: 600px;
     width: 100%;
     padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 14px;
+    border: 1px solid rgba(109, 31, 47, 0.15);
+    box-shadow:
+        0 10px 25px rgba(109, 31, 47, 0.12),
+        0 2px 8px rgba(0,0,0,0.05);
 }
 
 h1 {
     text-align: center;
     color: var(--primary-color);
-    border-bottom: 2px solid var(--accent-color);
+    border-bottom: 3px solid var(--accent-color);
     padding-bottom: 10px;
 }
 
 h2 {
     color: var(--primary-color);
-    font-size: 1.2rem;
-    margin-top: 25px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
 }
 
-.input-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-}
-
-label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    font-size: 0.9rem;
-}
-
-input, select {
+input,
+select {
     padding: 8px;
     border: 1px solid var(--border-color);
-    border-radius: 5px;
+    border-radius: 6px;
     font-size: 1rem;
+    background-color: #fff;
+    color: var(--text-color);
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-}
-
-.warning {
-    grid-column: span 2;
-    background-color: #fee2e2;
-    color: #ef4444;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    font-weight: bold;
-}
-
-.hidden {
-    display: none;
+    box-shadow: 0 0 0 4px rgba(166, 61, 80, 0.15);
 }
 
 .output-section p {
     margin: 8px 0;
-    background: var(--bg-color);
+    background: #f9f2f4;
     padding: 10px;
-    border-radius: 5px;
-    border-left: 4px solid var(--primary-color);
+    border-radius: 6px;
+    border-left: 5px solid var(--primary-color);
 }
 
 .highlight {
@@ -101,30 +77,31 @@ input:focus, select:focus {
     font-size: 1.1rem;
 }
 
-/* Agrega esto al final de tu style.css existente */
-
-.input-span-2 {
-    grid-column: span 2;
+.warning {
+    background-color: #fdecec;
+    color: #b42318;
+    border: 1px solid #f1b4b4;
 }
 
 .crypto-box {
     display: block;
-    background-color: #1e272e;
-    color: #0fb9b1;
+    background: #4b1622;
+    color: #ffd9df;
     font-family: 'Courier New', Courier, monospace;
     padding: 12px;
-    border-radius: 5px;
+    border-radius: 6px;
     word-wrap: break-word;
     font-size: 1.1rem;
     font-weight: bold;
     letter-spacing: 2px;
     margin-top: 5px;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .crypto-box.success {
-    background-color: #f1f8e9;
-    color: #27ae60;
-    border: 1px solid #27ae60;
+    background-color: #f7f0f2;
+    color: #6d1f2f;
+    border: 1px solid #a63d50;
 }
 
 
