@@ -5,96 +5,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorio RSA Interactivo</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Laboratorio de Criptografía RSA</h1>
-
-        <div class="card block-1">
-            <div class="card-header">
-                <h2>Bloque 1: Generación de Claves (Aritmética Modular)</h2>
-            </div>
-            <div class="card-body">
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Primo p:</label>
-                        <input type="number" id="p-input" value="47" min="2">
-                    </div>
-                    <div class="input-group">
-                        <label>Primo q:</label>
-                        <input type="number" id="q-input" value="53" min="2">
-                    </div>
-                    <div class="input-group">
-                        <label>Exponente e:</label>
-                        <select id="e-select"></select>
-                    </div>
-                </div>
-
-                <div id="math-warning" class="warning hidden">Error: p y q deben ser primos válidos.</div>
-
-                <table class="math-table">
+        <div class="card dark-panel">
+            <table class="math-table">
+                <thead>
                     <tr>
                         <th>Paso</th>
                         <th>Descripción</th>
                         <th>Resultado</th>
                     </tr>
+                </thead>
+                <tbody>
                     <tr>
-                        <td>1. Módulo</td>
-                        <td>n = p &times; q</td>
-                        <td id="td-n" class="highlight">-</td>
+                        <td>1. Primalidad</td>
+                        <td>¿Son p y q primos válidos?</td>
+                        <td id="res-prim">✅ Sí</td>
                     </tr>
                     <tr>
-                        <td>2. Totiente</td>
-                        <td>&phi;(n) = (p-1) &times; (q-1)</td>
-                        <td id="td-phi">-</td>
+                        <td>2. Módulo (n)</td>
+                        <td>\( n = p \times q \)</td>
+                        <td id="res-n">11 &times; 13 = 143</td>
                     </tr>
                     <tr>
-                        <td>3. Inverso</td>
-                        <td>d &equiv; e&spadesuit;&sup1; (mod &phi;(n))</td>
-                        <td id="td-d" class="highlight">-</td>
+                        <td>3. Totiente (\(\phi\))</td>
+                        <td>\( \phi(n) = (p-1) \times (q-1) \)</td>
+                        <td id="res-phi">10 &times; 12 = 120</td>
                     </tr>
-                </table>
+                    <tr>
+                        <td>4. Exponente (e)</td>
+                        <td>Clave pública: \( \gcd(e, \phi(n)) = 1 \)</td>
+                        <td id="res-e">✅ 7 es válido</td>
+                    </tr>
+                    <tr>
+                        <td>5. Inverso (d)</td>
+                        <td>\( d \equiv e^{-1} \pmod{\phi(n)} \)</td>
+                        <td id="res-d-step">103</td>
+                    </tr>
+                    <tr>
+                        <td>6. Cifrado</td>
+                        <td>\( C \equiv M^e \pmod n \)</td>
+                        <td id="res-c">7^7 mod 143 = 6</td>
+                    </tr>
+                    <tr>
+                        <td>7. Descifrado</td>
+                        <td>\( M \equiv C^d \pmod n \)</td>
+                        <td id="res-m-step">6^103 mod 143 = 7</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="divider"></div>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="label">n (p*q)</span>
+                    <span class="value" id="sum-n">143</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">\(\phi(n)\)</span>
+                    <span class="value" id="sum-phi">120</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">d (privada)</span>
+                    <span class="value" id="sum-d">103</span>
+                </div>
+            </div>
+
+            <div class="controls-grid">
+                <div class="control-row">
+                    <label>Primo p</label>
+                    <div class="stepper">
+                        <button class="btn-step" id="btn-p-minus">&minus;</button>
+                        <input type="number" id="p-input" value="11">
+                        <button class="btn-step" id="btn-p-plus">+</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Primo q</label>
+                    <div class="stepper">
+                        <button class="btn-step" id="btn-q-minus">&minus;</button>
+                        <input type="number" id="q-input" value="13">
+                        <button class="btn-step" id="btn-q-plus">+</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Mensaje M</label>
+                    <div class="stepper">
+                        <button class="btn-step" id="btn-m-minus">&minus;</button>
+                        <input type="number" id="m-num-input" value="7">
+                        <button class="btn-step" id="btn-m-plus">+</button>
+                    </div>
+                </div>
+                <div class="control-row e-row">
+                    <label>Exponente público e</label>
+                    <select id="e-select" class="dark-select"></select>
+                </div>
             </div>
         </div>
 
         <div class="card block-2" id="block-2">
-            <div class="card-header">
-                <h2>Bloque 2: Cifrado de Texto (Aplicación)</h2>
+            <h2>Bloque 2: Motor de Encriptación de Texto</h2>
+            <p class="subtitle">Utilizando las llaves generadas: Pública (<span id="lbl-e">7</span>, <span id="lbl-n1">143</span>) | Privada (<span id="lbl-d">103</span>, <span id="lbl-n2">143</span>)</p>
+            
+            <div id="ascii-warning" class="warning hidden">
+                ⚠️ El módulo n es muy pequeño para abarcar toda la tabla ASCII. Sube el valor de p y q en el Bloque 1 (n debe ser > 255).
             </div>
-            <div class="card-body">
-                <div id="ascii-warning" class="warning hidden">
-                    <strong>Espacio modular insuficiente:</strong> Para cifrar texto, el módulo n debe ser mayor a 255 (el tamaño de la tabla ASCII). Aumenta p o q en el Bloque 1.
-                </div>
 
-                <div class="keys-display">
-                    <div class="key-badge public">
-                        <span>Clave Pública Usada:</span>
-                        <strong>(<span id="lbl-e"></span>, <span id="lbl-n1"></span>)</strong>
-                    </div>
-                    <div class="key-badge private">
-                        <span>Clave Privada Usada:</span>
-                        <strong>(<span id="lbl-d"></span>, <span id="lbl-n2"></span>)</strong>
-                    </div>
-                </div>
+            <div class="input-group full-width">
+                <input type="text" id="text-input" value="HOLA" placeholder="Escribe el mensaje aquí...">
+            </div>
 
-                <div class="input-group full-width">
-                    <label>Escribe el mensaje a encriptar:</label>
-                    <input type="text" id="text-input" value="USIL 2026" placeholder="Ingresa texto plano...">
-                </div>
-
-                <div class="results-grid">
-                    <div class="result-box">
-                        <label>Mensaje Encriptado (Hex):</label>
-                        <div id="out-encrypted" class="crypto-text encrypted">-</div>
-                    </div>
-                    <div class="result-box">
-                        <label>Mensaje Descifrado:</label>
-                        <div id="out-decrypted" class="crypto-text decrypted">-</div>
-                    </div>
+            <div class="results-grid">
+                <div class="result-box">
+                    <label>Mensaje Encriptado (Total):</label>
+                    <div id="out-encrypted" class="crypto-text encrypted">-</div>
                 </div>
             </div>
         </div>
-
     </div>
     <script src="script.js"></script>
 </body>
