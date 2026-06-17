@@ -1,10 +1,34 @@
-// Funciones Matemáticas Auxiliares (Se mantienen igual)
-function isPrime(num) {
-    if (num <= 1) return false;
-    if (num <= 3) return true;
-    if (num % 2 === 0 || num % 3 === 0) return false;
-    for (let i = 5; i * i <= num; i += 6) {
-        if (num % i === 0 || num % (i + 2) === 0) return false;
+// --- MATEMÁTICAS AVANZADAS PARA BIGINT ---
+
+// Test de Primalidad de Miller-Rabin (Ultra rápido para números gigantes)
+function isPrimeBigInt(n) {
+    if (n === 2n || n === 3n) return true;
+    if (n <= 1n || n % 2n === 0n) return false;
+    
+    let d = n - 1n;
+    let s = 0n;
+    while (d % 2n === 0n) {
+        d /= 2n;
+        s += 1n;
+    }
+    
+    // Bases deterministas suficientes para n < 2^64
+    const bases = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n];
+    
+    for (let a of bases) {
+        if (n <= a) break;
+        let x = modPow(a, d, n);
+        if (x === 1n || x === n - 1n) continue;
+        
+        let composite = true;
+        for (let r = 1n; r < s; r++) {
+            x = modPow(x, 2n, n);
+            if (x === n - 1n) {
+                composite = false;
+                break;
+            }
+        }
+        if (composite) return false;
     }
     return true;
 }
@@ -46,117 +70,189 @@ function modPow(base, exp, mod) {
     return res;
 }
 
-// Elementos del DOM
+// Función para renderizar LaTeX dinámicamente con MathJax
+function renderMath() {
+    if (window.MathJax) {
+        MathJax.typesetPromise([document.getElementById('block-1')]).catch(function (err) {
+            console.log('Error de MathJax: ', err.message);
+        });
+    }
+}
+
+// --- REFERENCIAS DOM ---
 const pInput = document.getElementById('p-input');
 const qInput = document.getElementById('q-input');
-const mInput = document.getElementById('m-input');
+const textInput = document.getElementById('text-input');
 const eSelect = document.getElementById('e-select');
-const warningMsg = document.getElementById('warning-msg');
+const mainWarning = document.getElementById('main-warning');
 
-const outN = document.getElementById('out-n');
-const outPhi = document.getElementById('out-phi');
-const outD = document.getElementById('out-d');
-const outC = document.getElementById('out-c');
-const outMDec = document.getElementById('out-m-dec');
+const resPrim = document.getElementById('res-prim');
+const resN = document.getElementById('res-n');
+const resPhi = document.getElementById('res-phi');
+const resE = document.getElementById('res-e');
+const resD = document.getElementById('res-d');
+const resC = document.getElementById('res-c');
+const resM = document.getElementById('res-m');
 
-// Lógica Principal
-function updateRSA() {
-    const p = parseInt(pInput.value);
-    const q = parseInt(qInput.value);
-    const textMsg = mInput.value;
+const block1 = document.getElementById('block-1');
+const block2 = document.getElementById('block-2');
+const outEncrypted = document.getElementById('out-encrypted');
+const outDecrypted = document.getElementById('out-decrypted');
 
-    const n_val = p * q;
+let global_n, global_e, global_d;
 
-    // Validación de Primos y tamaño de módulo (> 255 para ASCII)
-    if (!isPrime(p) || !isPrime(q) || n_val <= 255) {
-        warningMsg.classList.remove('hidden');
-        outC.textContent = "Error de parámetros";
-        outMDec.textContent = "-";
-        return;
-    } else {
-        warningMsg.classList.add('hidden');
-    }
-
-    if (isNaN(p) || isNaN(q)) return;
-
-    const p_big = BigInt(p);
-    const q_big = BigInt(q);
-
-    // Paso 1: n y φ(n)
-    const n = p_big * q_big;
-    const phi = (p_big - 1n) * (q_big - 1n);
-
-    outN.textContent = n.toString();
-    outPhi.textContent = phi.toString();
-
-    populateESelect(phi);
-    if (!eSelect.value) return;
-    const e = BigInt(eSelect.value);
+// --- LÓGICA PRINCIPAL ---
+function updateSystem() {
+    mainWarning.classList.add('hidden');
+    let p_big, q_big;
 
     try {
-        const d = modInverse(e, phi);
-        outD.textContent = d.toString();
-
-        if (textMsg.length === 0) {
-            outC.textContent = "-";
-            outMDec.textContent = "-";
-            return;
-        }
-
-        let encryptedHexArray = [];
-        let decryptedText = "";
-
-        // Procesamiento de la matriz de caracteres
-        for (let i = 0; i < textMsg.length; i++) {
-            // 1. Mapeo a Entero (ASCII)
-            const m_char = BigInt(textMsg.charCodeAt(i));
-            
-            // 2. Cifrado Numérico
-            const c_char = modPow(m_char, e, n);
-            
-            // Guardar para visualización
-            encryptedHexArray.push(c_char.toString(16).toUpperCase().padStart(3, '0'));
-
-            // 3. Descifrado Numérico Inmediato
-            const m_decrypted = modPow(c_char, d, n);
-            decryptedText += String.fromCharCode(Number(m_decrypted));
-        }
-
-        outC.textContent = encryptedHexArray.join('-');
-        outMDec.textContent = decryptedText;
-        
-    } catch (error) {
-        outD.textContent = "Error en el cálculo";
+        // Parseo estricto a BigInt para evitar pérdidas de precisión de JS
+        p_big = BigInt(pInput.value.replace(/\s/g, ''));
+        q_big = BigInt(qInput.value.replace(/\s/g, ''));
+    } catch (e) {
+        showError("Ingresa números enteros válidos.");
+        return;
     }
+
+    const pIsPrime = isPrimeBigInt(p_big);
+    const qIsPrime = isPrimeBigInt(q_big);
+    const areDistinct = p_big !== q_big;
+
+    // 1. Primalidad y validaciones
+    if (!pIsPrime || !qIsPrime) {
+        resPrim.innerHTML = "❌ p y q deben ser primos";
+        resPrim.style.color = "var(--danger)";
+        showError("¡Error! p y q deben ser números primos.");
+        return;
+    } else if (!areDistinct) {
+        resPrim.innerHTML = "❌ p y q no pueden ser iguales";
+        resPrim.style.color = "var(--danger)";
+        showError("¡Error Matemático! En RSA, p y q DEBEN ser distintos.");
+        return;
+    } else {
+        resPrim.innerHTML = "✅ Sí (Primos y Distintos)";
+        resPrim.style.color = "var(--accent)";
+    }
+
+    global_n = p_big * q_big;
+    if (global_n <= 255n) {
+        showError("El módulo n (p*q) debe ser mayor a 255 para soportar caracteres de texto (ASCII).");
+        return;
+    }
+
+    const phi = (p_big - 1n) * (q_big - 1n);
+
+    // 2 y 3. Módulo y Totiente
+    resN.innerHTML = global_n.toString();
+    resPhi.innerHTML = phi.toString();
+
+    // Actualizar selector 'e'
+    populateESelect(phi);
+    if (!eSelect.value) return;
+    global_e = BigInt(eSelect.value);
+
+    // 4. Exponente
+    if (gcd(global_e, phi) === 1n) {
+        resE.innerHTML = `✅ ${global_e} es válido`;
+        resE.style.color = "var(--accent)";
+    } else {
+        resE.innerHTML = `❌ Inválido`;
+        resE.style.color = "var(--danger)";
+        return;
+    }
+
+    try {
+        // 5. Inverso
+        global_d = modInverse(global_e, phi);
+        resD.textContent = global_d.toString();
+
+        block1.classList.remove('disabled-block');
+        block2.classList.remove('disabled-block');
+
+        processText();
+    } catch (error) {
+        resD.textContent = "Error matemático";
+        showError("No se pudo calcular la clave privada.");
+    }
+}
+
+function processText() {
+    const text = textInput.value;
+    if (!text || !global_n || !global_e || !global_d) {
+        outEncrypted.textContent = "-";
+        outDecrypted.textContent = "-";
+        resC.textContent = "-";
+        resM.textContent = "-";
+        return;
+    }
+
+    let encryptedHex = [];
+    let decryptedStr = "";
+
+    for (let i = 0; i < text.length; i++) {
+        const charCode = BigInt(text.charCodeAt(i));
+        
+        // Cifrado
+        const cipherNum = modPow(charCode, global_e, global_n);
+        encryptedHex.push(cipherNum.toString(16).toUpperCase());
+
+        // Descifrado
+        const plainNum = modPow(cipherNum, global_d, global_n);
+        decryptedStr += String.fromCharCode(Number(plainNum));
+
+        // Mostrar el desglose con sintaxis LaTeX dinámica para la PRIMERA letra
+        if (i === 0) {
+            resC.innerHTML = `\\( \\text{ASCII}(${text[0]}) = ${charCode} \\rightarrow ${charCode}^{${global_e}} \\pmod{${global_n}} = \\mathbf{${cipherNum}} \\)`;
+            resM.innerHTML = `\\( ${cipherNum}^{${global_d}} \\pmod{${global_n}} = ${plainNum} \\rightarrow \\mathbf{'${String.fromCharCode(Number(plainNum))}'} \\)`;
+        }
+    }
+
+    outEncrypted.textContent = encryptedHex.join('-');
+    outDecrypted.textContent = decryptedStr;
+
+    // Ordenar a MathJax que vuelva a dibujar las ecuaciones tras actualizar los valores
+    renderMath();
 }
 
 function populateESelect(phi) {
     const currentE = eSelect.value;
     eSelect.innerHTML = '';
-    let optionsAdded = 0;
+    let count = 0;
 
-    for (let i = 2n; i < phi && optionsAdded < 30; i++) {
+    // Buscar candidatos a 'e' empezando desde 3
+    for (let i = 3n; i < phi && count < 30; i+=2n) {
         if (gcd(i, phi) === 1n) {
-            const option = document.createElement('option');
-            option.value = i.toString();
-            option.textContent = i.toString();
-            eSelect.appendChild(option);
-            optionsAdded++;
+            const opt = document.createElement('option');
+            opt.value = i.toString();
+            opt.textContent = i.toString();
+            eSelect.appendChild(opt);
+            count++;
         }
     }
 
-    if (currentE && Array.from(eSelect.options).some(opt => opt.value === currentE)) {
+    // Mantener la selección actual si aún es válida, sino tomar una del medio
+    if (currentE && Array.from(eSelect.options).some(o => o.value === currentE)) {
         eSelect.value = currentE;
-    } else if(eSelect.options.length > 0){
-        eSelect.selectedIndex = eSelect.options.length - 1;
+    } else if (eSelect.options.length > 0) {
+        eSelect.selectedIndex = Math.min(5, eSelect.options.length - 1); 
     }
 }
 
-// Listeners de Eventos
-pInput.addEventListener('input', updateRSA);
-qInput.addEventListener('input', updateRSA);
-mInput.addEventListener('input', updateRSA);
-eSelect.addEventListener('change', updateRSA);
+function showError(msg) {
+    mainWarning.textContent = msg;
+    mainWarning.classList.remove('hidden');
+    block1.classList.add('disabled-block');
+    block2.classList.add('disabled-block');
+    outEncrypted.textContent = "-";
+    outDecrypted.textContent = "-";
+}
 
-// Inicialización
-updateRSA();
+// Listeners
+pInput.addEventListener('input', updateSystem);
+qInput.addEventListener('input', updateSystem);
+textInput.addEventListener('input', processText);
+eSelect.addEventListener('change', updateSystem);
+
+// Iniciar
+updateSystem();
