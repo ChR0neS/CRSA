@@ -1,6 +1,5 @@
 // --- MATEMÁTICAS AVANZADAS PARA BIGINT ---
 
-// Test de Primalidad de Miller-Rabin (Ultra rápido para números gigantes)
 function isPrimeBigInt(n) {
     if (n === 2n || n === 3n) return true;
     if (n <= 1n || n % 2n === 0n) return false;
@@ -12,7 +11,6 @@ function isPrimeBigInt(n) {
         s += 1n;
     }
     
-    // Bases deterministas suficientes para n < 2^64
     const bases = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n];
     
     for (let a of bases) {
@@ -70,7 +68,6 @@ function modPow(base, exp, mod) {
     return res;
 }
 
-// Función para renderizar LaTeX dinámicamente con MathJax
 function renderMath() {
     if (window.MathJax) {
         MathJax.typesetPromise([document.getElementById('block-1')]).catch(function (err) {
@@ -100,6 +97,7 @@ const outEncrypted = document.getElementById('out-encrypted');
 const outDecrypted = document.getElementById('out-decrypted');
 
 let global_n, global_e, global_d;
+let last_phi; // <--- FIX: Memoria para evitar reconstrucción infinita del select
 
 // --- LÓGICA PRINCIPAL ---
 function updateSystem() {
@@ -107,7 +105,6 @@ function updateSystem() {
     let p_big, q_big;
 
     try {
-        // Parseo estricto a BigInt para evitar pérdidas de precisión de JS
         p_big = BigInt(pInput.value.replace(/\s/g, ''));
         q_big = BigInt(qInput.value.replace(/\s/g, ''));
     } catch (e) {
@@ -147,9 +144,20 @@ function updateSystem() {
     resN.innerHTML = global_n.toString();
     resPhi.innerHTML = phi.toString();
 
-    // Actualizar selector 'e'
-    populateESelect(phi);
-    if (!eSelect.value) return;
+    // FIX: Solo reconstruir las opciones de 'e' si phi realmente cambió
+    if (phi !== last_phi) {
+        populateESelect(phi);
+        last_phi = phi;
+    }
+
+    // Verificar si hay opciones en el selector de e
+    if (!eSelect.value) {
+        resE.innerHTML = `❌ Inválido`;
+        resE.style.color = "var(--danger)";
+        showError("No se encontraron exponentes públicos válidos para estos números primos.");
+        return;
+    }
+
     global_e = BigInt(eSelect.value);
 
     // 4. Exponente
@@ -252,7 +260,7 @@ function showError(msg) {
 pInput.addEventListener('input', updateSystem);
 qInput.addEventListener('input', updateSystem);
 textInput.addEventListener('input', processText);
-eSelect.addEventListener('change', updateSystem);
+eSelect.addEventListener('change', updateSystem); // Ahora esto funciona correctamente sin romper el DOM
 
 // Iniciar
 updateSystem();
