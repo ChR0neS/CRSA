@@ -43,7 +43,6 @@ h1 {
     box-shadow: 0 8px 24px rgba(0,0,0,0.8);
 }
 
-/* Controles de Entrada */
 .input-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -77,9 +76,10 @@ input[type="text"], input[type="number"], select {
     font-family: 'Courier New', Courier, monospace;
     outline: none;
     transition: border-color 0.2s;
+    cursor: pointer;
 }
 
-input:focus, select:focus {
+input[type="text"]:focus, select:focus {
     border-color: #58a6ff;
 }
 
@@ -96,7 +96,6 @@ input:focus, select:focus {
 
 .hidden { display: none; }
 
-/* Tabla del Bloque 1 */
 .math-table {
     width: 100%;
     border-collapse: collapse;
@@ -126,7 +125,6 @@ input:focus, select:focus {
     word-break: break-all;
 }
 
-/* Bloque 2 - Encriptador de Texto */
 .card-title {
     margin-top: 0;
     font-size: 1.3rem;
@@ -168,8 +166,6 @@ input:focus, select:focus {
     pointer-events: none;
     filter: grayscale(100%);
 }
-
-
 
 
 
