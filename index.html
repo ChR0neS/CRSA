@@ -20,11 +20,11 @@
             <div class="input-grid">
                 <div class="input-group">
                     <label>Primo p:</label>
-                    <input type="text" id="p-input" value="1000000007">
+                    <input type="text" id="p-input" value="1013">
                 </div>
                 <div class="input-group">
                     <label>Primo q:</label>
-                    <input type="text" id="q-input" value="1000000009">
+                    <input type="text" id="q-input" value="1009">
                 </div>
                 <div class="input-group full">
                     <label>Mensaje a Encriptar:</label>
@@ -40,13 +40,13 @@
         <div class="card" id="block-1">
             <h2 class="card-title">Bloque 1: Trazabilidad Matemática</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -10px; margin-bottom: 20px;">
-                Mostrando el proceso algebraico para generar las claves y procesar la primera letra del mensaje.
+                Proceso algebraico para generar las claves y procesar la primera letra del mensaje
             </p>
             <table class="math-table">
                 <thead>
                     <tr>
-                        <th>Paso</th>
-                        <th>Descripción (LaTeX)</th>
+                        <th>Pasos</th>
+                        <th>Descripción</th>
                         <th>Resultado Dinámico</th>
                     </tr>
                 </thead>
@@ -62,7 +62,7 @@
                         <td id="res-n">-</td>
                     </tr>
                     <tr>
-                        <td>3. Totiente (\(\phi\))</td>
+                        <td>3. Función de Euler (\(\phi\))</td>
                         <td>\( \phi(n) = (p-1)(q-1) \)</td>
                         <td id="res-phi">-</td>
                     </tr>
