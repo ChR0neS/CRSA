@@ -3,46 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Interactiva RSA</title>
+    <title>Laboratorio RSA Avanzado</title>
+    
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>RSA</h1>
-        
-        <div class="input-section">
-            <div class="input-group">
-                <label for="p-input">Primo p:</label>
-                <input type="number" id="p-input" value="47" min="2">
+        <h1>Laboratorio RSA Educativo</h1>
+
+        <div class="card">
+            <div id="main-warning" class="warning hidden"></div>
+            
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>Primo p:</label>
+                    <input type="text" id="p-input" value="1000000007">
+                </div>
+                <div class="input-group">
+                    <label>Primo q:</label>
+                    <input type="text" id="q-input" value="1000000009">
+                </div>
+                <div class="input-group full">
+                    <label>Mensaje a Encriptar:</label>
+                    <input type="text" id="text-input" value="UNI">
+                </div>
+                <div class="input-group">
+                    <label>Exponente público (e):</label>
+                    <select id="e-select"></select>
+                </div>
             </div>
-            <div class="input-group">
-                <label for="q-input">Primo q:</label>
-                <input type="number" id="q-input" value="53" min="2">
-            </div>
-            <div class="input-group input-span-2">
-                <label for="m-input">Mensaje a Encriptar:</label>
-                <input type="text" id="m-input" value="UNI">
-            </div>
-            <div class="input-group input-span-2">
-                <label for="e-select">Clave pública e:</label>
-                <select id="e-select"></select>
-            </div>
-            <div id="warning-msg" class="warning hidden">¡Atención! p y q deben ser primos.</div>
         </div>
 
-        <div class="output-section">
-            <h2>Paso 1: Generación de Claves</h2>
-            <p>Módulo <strong>n</strong> (p &times; q): <span id="out-n">-</span></p>
-            <p>Función de Euler <strong>&phi;(n)</strong>: <span id="out-phi">-</span></p>
-            <p>Clave Privada <strong>d</strong>: <span id="out-d">-</span></p>
+        <div class="card" id="block-1">
+            <h2 class="card-title">Bloque 1: Trazabilidad Matemática</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -10px; margin-bottom: 20px;">
+                Mostrando el proceso algebraico para generar las claves y procesar la primera letra del mensaje.
+            </p>
+            <table class="math-table">
+                <thead>
+                    <tr>
+                        <th>Paso</th>
+                        <th>Descripción (LaTeX)</th>
+                        <th>Resultado Dinámico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1. Primalidad</td>
+                        <td>¿Son \( p \) y \( q \) primos válidos y distintos?</td>
+                        <td id="res-prim">✅ Sí</td>
+                    </tr>
+                    <tr>
+                        <td>2. Módulo (n)</td>
+                        <td>\( n = p \times q \)</td>
+                        <td id="res-n">-</td>
+                    </tr>
+                    <tr>
+                        <td>3. Totiente (\(\phi\))</td>
+                        <td>\( \phi(n) = (p-1)(q-1) \)</td>
+                        <td id="res-phi">-</td>
+                    </tr>
+                    <tr>
+                        <td>4. Exponente (e)</td>
+                        <td>Clave pública: \( \gcd(e, \phi(n)) = 1 \)</td>
+                        <td id="res-e">-</td>
+                    </tr>
+                    <tr>
+                        <td>5. Inverso (d)</td>
+                        <td>\( d \equiv e^{-1} \pmod{\phi(n)} \)</td>
+                        <td id="res-d">-</td>
+                    </tr>
+                    <tr>
+                        <td>6. Cifrado (Letra 1)</td>
+                        <td>\( C \equiv M^e \pmod n \)</td>
+                        <td id="res-c">-</td>
+                    </tr>
+                    <tr>
+                        <td>7. Descifrado (Letra 1)</td>
+                        <td>\( M \equiv C^d \pmod n \)</td>
+                        <td id="res-m">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-            <h2>Paso 2: Cifrado (Bloque a Bloque)</h2>
-            <p>Fórmula aplicada a cada letra: C<sub>i</sub> = M<sub>i</sub><sup>e</sup> mod n</p>
-            <p>Criptograma (Hexadecimal): <br><span id="out-c" class="crypto-box">-</span></p>
-
-            <h2>Paso 3: Descifrado</h2>
-            <p>Fórmula de reversión: M<sub>i</sub> = C<sub>i</sub><sup>d</sup> mod n</p>
-            <p>Mensaje Original Descifrado: <br><span id="out-m-dec" class="crypto-box success">-</span></p>
+        <div class="card" id="block-2">
+            <h2 class="card-title">Bloque 2: Motor de Encriptación (Mensaje Completo)</h2>
+            <div class="results-grid">
+                <div>
+                    <label>Criptograma (Hexadecimal Unificado):</label>
+                    <div id="out-encrypted" class="crypto-box encrypted">-</div>
+                </div>
+                <div>
+                    <label>Mensaje Original Descifrado:</label>
+                    <div id="out-decrypted" class="crypto-box decrypted">-</div>
+                </div>
+            </div>
         </div>
     </div>
 
