@@ -69,20 +69,22 @@ function modPow(base, exp, mod) {
     return res;
 }
 
-// --- FUNCIÓN DE ANÁLISIS DE COMPLEJIDAD ---
+// --- FUNCIÓN DE ANÁLISIS DE COMPLEJIDAD MEJORADA ---
 function analyzeComplexity(exponent) {
-    // Convertimos el BigInt a su representación binaria
     const binString = exponent.toString(2);
     const bits = binString.length;
     
-    // Cuenta la cantidad de '1's en la cadena binaria
-    // Cada '1' extra significa una multiplicación adicional en el algoritmo
+    // Cuenta la cantidad de '1's.
     const ones = binString.split('1').length - 1; 
     
-    // Total de operaciones matemáticas = (bits de cuadrados) + (unos de multiplicaciones)
-    const operations = bits + ones; 
+    // Matemática pura del Square-and-Multiply:
+    // Número de cuadrados (squarings) = longitud de bits - 1
+    // Número de multiplicaciones = número de unos - 1
+    const squarings = bits - 1;
+    const multiplications = ones - 1;
+    const totalOps = squarings + multiplications;
 
-    return { bits, operations };
+    return { bits, totalOps, squarings, multiplications };
 }
 
 function renderMath() {
@@ -97,7 +99,7 @@ function renderMath() {
 const pInput = document.getElementById('p-input');
 const qInput = document.getElementById('q-input');
 const textInput = document.getElementById('text-input');
-const eSelect = document.getElementById('e-select');
+const eInput = document.getElementById('e-input'); // Ahora es un Input
 const mainWarning = document.getElementById('main-warning');
 
 const resPrim = document.getElementById('res-prim');
@@ -110,29 +112,27 @@ const resM = document.getElementById('res-m');
 
 const block1 = document.getElementById('block-1');
 const block2 = document.getElementById('block-2');
-const block3 = document.getElementById('block-3'); // Nuevo bloque
+const block3 = document.getElementById('block-3');
 const outEncrypted = document.getElementById('out-encrypted');
 const outDecrypted = document.getElementById('out-decrypted');
 
-// Referencias Complejidad
 const compEncBits = document.getElementById('comp-enc-bits');
 const compEncOps = document.getElementById('comp-enc-ops');
 const compDecBits = document.getElementById('comp-dec-bits');
 const compDecOps = document.getElementById('comp-dec-ops');
 
 let global_n, global_e, global_d;
-let last_phi; 
 
 // --- LÓGICA PRINCIPAL ---
 function updateSystem() {
     mainWarning.classList.add('hidden');
-    let p_big, q_big;
+    let p_big, q_big, e_val;
 
     try {
         p_big = BigInt(pInput.value.replace(/\s/g, ''));
         q_big = BigInt(qInput.value.replace(/\s/g, ''));
     } catch (e) {
-        showError("Ingresa números enteros válidos.");
+        showError("Ingresa números primos válidos en p y q.");
         return;
     }
 
@@ -166,28 +166,27 @@ function updateSystem() {
     resN.innerHTML = global_n.toString();
     resPhi.innerHTML = phi.toString();
 
-    if (phi !== last_phi) {
-        populateESelect(phi);
-        last_phi = phi;
-    }
-
-    if (!eSelect.value) {
-        resE.innerHTML = `❌ Inválido`;
+    // Validar el Exponente E que el usuario ha escrito
+    try {
+        e_val = BigInt(eInput.value.replace(/\s/g, ''));
+    } catch (e) {
+        resE.innerHTML = `❌ Formato inválido`;
         resE.style.color = "var(--danger)";
-        showError("No se encontraron exponentes públicos válidos para estos números primos.");
+        showError("Ingresa un número válido para el exponente público (e).");
         return;
     }
 
-    global_e = BigInt(eSelect.value);
-
-    if (gcd(global_e, phi) === 1n) {
-        resE.innerHTML = `✅ ${global_e} es válido`;
-        resE.style.color = "var(--accent)";
+    if (e_val <= 1n || e_val >= phi || gcd(e_val, phi) !== 1n) {
+        resE.innerHTML = `❌ No es coprimo con \(\\phi\)`;
+        resE.style.color = "var(--danger)";
+        showError(`El exponente ${e_val} NO es válido. Prueba con un número primo que no comparta divisores con la función de Euler (como 65537, 41, 17...).`);
+        return;
     } else {
-        resE.innerHTML = `❌ Inválido`;
-        resE.style.color = "var(--danger)";
-        return;
+        resE.innerHTML = `✅ ${e_val} es válido`;
+        resE.style.color = "var(--accent)";
     }
+
+    global_e = e_val;
 
     try {
         global_d = modInverse(global_e, phi);
@@ -197,15 +196,15 @@ function updateSystem() {
         block2.classList.remove('disabled-block');
         block3.classList.remove('disabled-block');
 
-        // Calcular y mostrar la complejidad
+        // Renderizar la complejidad dinámicamente
         const encStats = analyzeComplexity(global_e);
         const decStats = analyzeComplexity(global_d);
 
         compEncBits.textContent = `${encStats.bits} bits`;
-        compEncOps.textContent = `${encStats.operations} ops`;
+        compEncOps.textContent = `${encStats.totalOps} (${encStats.squarings} cuad. + ${encStats.multiplications} mult.)`;
         
         compDecBits.textContent = `${decStats.bits} bits`;
-        compDecOps.textContent = `${decStats.operations} ops`;
+        compDecOps.textContent = `${decStats.totalOps} (${decStats.squarings} cuad. + ${decStats.multiplications} mult.)`;
 
         processText();
     } catch (error) {
@@ -248,28 +247,6 @@ function processText() {
     renderMath();
 }
 
-function populateESelect(phi) {
-    const currentE = eSelect.value;
-    eSelect.innerHTML = '';
-    let count = 0;
-
-    for (let i = 3n; i < phi && count < 30; i+=2n) {
-        if (gcd(i, phi) === 1n) {
-            const opt = document.createElement('option');
-            opt.value = i.toString();
-            opt.textContent = i.toString();
-            eSelect.appendChild(opt);
-            count++;
-        }
-    }
-
-    if (currentE && Array.from(eSelect.options).some(o => o.value === currentE)) {
-        eSelect.value = currentE;
-    } else if (eSelect.options.length > 0) {
-        eSelect.selectedIndex = Math.min(5, eSelect.options.length - 1); 
-    }
-}
-
 function showError(msg) {
     mainWarning.textContent = msg;
     mainWarning.classList.remove('hidden');
@@ -284,7 +261,7 @@ function showError(msg) {
 pInput.addEventListener('input', updateSystem);
 qInput.addEventListener('input', updateSystem);
 textInput.addEventListener('input', processText);
-eSelect.addEventListener('change', updateSystem);
+eInput.addEventListener('input', updateSystem); // Responde en tiempo real al escribir el exponente
 
 // Iniciar
 updateSystem();
