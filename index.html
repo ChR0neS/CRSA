@@ -12,7 +12,7 @@
 </head>
 <body>
     <div class="container">
-        <h1> RSA </h1>
+        <h1>Laboratorio RSA Educativo</h1>
 
         <div class="card">
             <div id="main-warning" class="warning hidden"></div>
@@ -102,6 +102,37 @@
                     <div id="out-decrypted" class="crypto-box decrypted">-</div>
                 </div>
             </div>
+        </div>
+
+        <div class="card" id="block-3">
+            <h2 class="card-title">Bloque 3: Análisis de Complejidad Computacional</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -10px; margin-bottom: 20px;">
+                Evaluación del algoritmo de <strong>Exponenciación Modular Rápida</strong> (<em>Square-and-Multiply</em>) utilizado por cada carácter procesado. En lugar de ejecutar \( O(exponente) \) multiplicaciones, el algoritmo reduce el trabajo a la longitud en bits del exponente \( O(\log(\text{exponente})) \).
+            </p>
+            <table class="math-table">
+                <thead>
+                    <tr>
+                        <th>Proceso (Por carácter)</th>
+                        <th>Longitud Binaria</th>
+                        <th>Operaciones Ejecutadas</th>
+                        <th>Complejidad Big-O</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cifrado (Usando \( e \))</td>
+                        <td id="comp-enc-bits">-</td>
+                        <td id="comp-enc-ops">-</td>
+                        <td>\( O(\log e) \)</td>
+                    </tr>
+                    <tr>
+                        <td>Descifrado (Usando \( d \))</td>
+                        <td id="comp-dec-bits">-</td>
+                        <td id="comp-dec-ops">-</td>
+                        <td>\( O(\log d) \)</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
