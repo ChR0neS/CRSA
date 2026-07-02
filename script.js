@@ -57,6 +57,7 @@ function modInverse(a, m) {
     return x;
 }
 
+// Algoritmo Square-and-Multiply
 function modPow(base, exp, mod) {
     let res = 1n;
     base = base % mod;
@@ -68,9 +69,25 @@ function modPow(base, exp, mod) {
     return res;
 }
 
+// --- FUNCIÓN DE ANÁLISIS DE COMPLEJIDAD ---
+function analyzeComplexity(exponent) {
+    // Convertimos el BigInt a su representación binaria
+    const binString = exponent.toString(2);
+    const bits = binString.length;
+    
+    // Cuenta la cantidad de '1's en la cadena binaria
+    // Cada '1' extra significa una multiplicación adicional en el algoritmo
+    const ones = binString.split('1').length - 1; 
+    
+    // Total de operaciones matemáticas = (bits de cuadrados) + (unos de multiplicaciones)
+    const operations = bits + ones; 
+
+    return { bits, operations };
+}
+
 function renderMath() {
     if (window.MathJax) {
-        MathJax.typesetPromise([document.getElementById('block-1')]).catch(function (err) {
+        MathJax.typesetPromise([document.getElementById('block-1'), document.getElementById('block-3')]).catch(function (err) {
             console.log('Error de MathJax: ', err.message);
         });
     }
@@ -93,11 +110,18 @@ const resM = document.getElementById('res-m');
 
 const block1 = document.getElementById('block-1');
 const block2 = document.getElementById('block-2');
+const block3 = document.getElementById('block-3'); // Nuevo bloque
 const outEncrypted = document.getElementById('out-encrypted');
 const outDecrypted = document.getElementById('out-decrypted');
 
+// Referencias Complejidad
+const compEncBits = document.getElementById('comp-enc-bits');
+const compEncOps = document.getElementById('comp-enc-ops');
+const compDecBits = document.getElementById('comp-dec-bits');
+const compDecOps = document.getElementById('comp-dec-ops');
+
 let global_n, global_e, global_d;
-let last_phi; // <--- FIX: Memoria para evitar reconstrucción infinita del select
+let last_phi; 
 
 // --- LÓGICA PRINCIPAL ---
 function updateSystem() {
@@ -116,7 +140,6 @@ function updateSystem() {
     const qIsPrime = isPrimeBigInt(q_big);
     const areDistinct = p_big !== q_big;
 
-    // 1. Primalidad y validaciones
     if (!pIsPrime || !qIsPrime) {
         resPrim.innerHTML = "❌ p y q deben ser primos";
         resPrim.style.color = "var(--danger)";
@@ -140,17 +163,14 @@ function updateSystem() {
 
     const phi = (p_big - 1n) * (q_big - 1n);
 
-    // 2 y 3. Módulo y Totiente
     resN.innerHTML = global_n.toString();
     resPhi.innerHTML = phi.toString();
 
-    // FIX: Solo reconstruir las opciones de 'e' si phi realmente cambió
     if (phi !== last_phi) {
         populateESelect(phi);
         last_phi = phi;
     }
 
-    // Verificar si hay opciones en el selector de e
     if (!eSelect.value) {
         resE.innerHTML = `❌ Inválido`;
         resE.style.color = "var(--danger)";
@@ -160,7 +180,6 @@ function updateSystem() {
 
     global_e = BigInt(eSelect.value);
 
-    // 4. Exponente
     if (gcd(global_e, phi) === 1n) {
         resE.innerHTML = `✅ ${global_e} es válido`;
         resE.style.color = "var(--accent)";
@@ -171,12 +190,22 @@ function updateSystem() {
     }
 
     try {
-        // 5. Inverso
         global_d = modInverse(global_e, phi);
         resD.textContent = global_d.toString();
 
         block1.classList.remove('disabled-block');
         block2.classList.remove('disabled-block');
+        block3.classList.remove('disabled-block');
+
+        // Calcular y mostrar la complejidad
+        const encStats = analyzeComplexity(global_e);
+        const decStats = analyzeComplexity(global_d);
+
+        compEncBits.textContent = `${encStats.bits} bits`;
+        compEncOps.textContent = `${encStats.operations} ops`;
+        
+        compDecBits.textContent = `${decStats.bits} bits`;
+        compDecOps.textContent = `${decStats.operations} ops`;
 
         processText();
     } catch (error) {
@@ -201,15 +230,12 @@ function processText() {
     for (let i = 0; i < text.length; i++) {
         const charCode = BigInt(text.charCodeAt(i));
         
-        // Cifrado
         const cipherNum = modPow(charCode, global_e, global_n);
         encryptedHex.push(cipherNum.toString(16).toUpperCase());
 
-        // Descifrado
         const plainNum = modPow(cipherNum, global_d, global_n);
         decryptedStr += String.fromCharCode(Number(plainNum));
 
-        // Mostrar el desglose con sintaxis LaTeX dinámica para la PRIMERA letra
         if (i === 0) {
             resC.innerHTML = `\\( \\text{ASCII}(${text[0]}) = ${charCode} \\rightarrow ${charCode}^{${global_e}} \\pmod{${global_n}} = \\mathbf{${cipherNum}} \\)`;
             resM.innerHTML = `\\( ${cipherNum}^{${global_d}} \\pmod{${global_n}} = ${plainNum} \\rightarrow \\mathbf{'${String.fromCharCode(Number(plainNum))}'} \\)`;
@@ -219,7 +245,6 @@ function processText() {
     outEncrypted.textContent = encryptedHex.join('-');
     outDecrypted.textContent = decryptedStr;
 
-    // Ordenar a MathJax que vuelva a dibujar las ecuaciones tras actualizar los valores
     renderMath();
 }
 
@@ -228,7 +253,6 @@ function populateESelect(phi) {
     eSelect.innerHTML = '';
     let count = 0;
 
-    // Buscar candidatos a 'e' empezando desde 3
     for (let i = 3n; i < phi && count < 30; i+=2n) {
         if (gcd(i, phi) === 1n) {
             const opt = document.createElement('option');
@@ -239,7 +263,6 @@ function populateESelect(phi) {
         }
     }
 
-    // Mantener la selección actual si aún es válida, sino tomar una del medio
     if (currentE && Array.from(eSelect.options).some(o => o.value === currentE)) {
         eSelect.value = currentE;
     } else if (eSelect.options.length > 0) {
@@ -252,6 +275,7 @@ function showError(msg) {
     mainWarning.classList.remove('hidden');
     block1.classList.add('disabled-block');
     block2.classList.add('disabled-block');
+    block3.classList.add('disabled-block');
     outEncrypted.textContent = "-";
     outDecrypted.textContent = "-";
 }
@@ -260,7 +284,7 @@ function showError(msg) {
 pInput.addEventListener('input', updateSystem);
 qInput.addEventListener('input', updateSystem);
 textInput.addEventListener('input', processText);
-eSelect.addEventListener('change', updateSystem); // Ahora esto funciona correctamente sin romper el DOM
+eSelect.addEventListener('change', updateSystem);
 
 // Iniciar
 updateSystem();
