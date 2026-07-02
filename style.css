@@ -125,6 +125,18 @@ input[type="text"]:focus, select:focus {
     word-break: break-all;
 }
 
+/* Ajuste específico para la nueva tabla del bloque 3 para evitar saltos raros */
+#block-3 .math-table td:nth-child(2),
+#block-3 .math-table td:nth-child(3) {
+    color: #d2a8ff;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#block-3 .math-table td:nth-child(4) {
+    color: #ff7b72;
+    font-weight: bold;
+}
+
 .card-title {
     margin-top: 0;
     font-size: 1.3rem;
@@ -166,23 +178,3 @@ input[type="text"]:focus, select:focus {
     pointer-events: none;
     filter: grayscale(100%);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
