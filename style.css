@@ -76,7 +76,6 @@ input[type="text"], input[type="number"], select {
     font-family: 'Courier New', Courier, monospace;
     outline: none;
     transition: border-color 0.2s;
-    cursor: pointer;
 }
 
 input[type="text"]:focus, select:focus {
@@ -125,7 +124,6 @@ input[type="text"]:focus, select:focus {
     word-break: break-all;
 }
 
-/* Ajuste específico para la nueva tabla del bloque 3 para evitar saltos raros */
 #block-3 .math-table td:nth-child(2),
 #block-3 .math-table td:nth-child(3) {
     color: #d2a8ff;
