@@ -32,7 +32,7 @@
                 </div>
                 <div class="input-group">
                     <label>Exponente público (e):</label>
-                    <select id="e-select"></select>
+                    <input type="text" id="e-input" value="41">
                 </div>
             </div>
         </div>
@@ -107,14 +107,14 @@
         <div class="card" id="block-3">
             <h2 class="card-title">Bloque 3: Análisis de Complejidad Computacional</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: -10px; margin-bottom: 20px;">
-                Evaluación del algoritmo de <strong>Exponenciación Modular Rápida</strong> (<em>Square-and-Multiply</em>) utilizado por cada carácter procesado. En lugar de ejecutar \( O(exponente) \) multiplicaciones, el algoritmo reduce el trabajo a la longitud en bits del exponente \( O(\log(\text{exponente})) \).
+                Evaluación del algoritmo de <strong>Exponenciación Modular Rápida</strong> (<em>Square-and-Multiply</em>) utilizado por cada carácter procesado. En lugar de ejecutar operaciones equivalentes al valor del exponente, se reducen a la longitud de sus bits \( O(\log(\text{exp})) \).
             </p>
             <table class="math-table">
                 <thead>
                     <tr>
                         <th>Proceso (Por carácter)</th>
                         <th>Longitud Binaria</th>
-                        <th>Operaciones Ejecutadas</th>
+                        <th>Operaciones Exactas</th>
                         <th>Complejidad Big-O</th>
                     </tr>
                 </thead>
